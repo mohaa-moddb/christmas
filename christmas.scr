@@ -1,0 +1,1739 @@
+// Updated 05/12/2006			
+	/*_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+	\_| ))  O  ((	*	.	*	|_/
+	\_|   (  ) 				|_/
+	\_| * /  \	   Christmas Mod	|_/
+	\_|  (    )   *	  			|_/
+	\_|  /'-' \	  www.mods-r-us.net	|_/
+	\_| (      )	.		.	|_/
+	\_| /'. _ .\				|_/
+	\_|(        )		.		|_/
+	\_|  .___ .	*		*	|_/
+	\_|  (____)		.		|_/
+	\_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_*/
+
+//Tree thing above. stolen from ric-hard :D tack
+/* ********************************************************
+
+	This is the christmas mod main script. It should be 
+	executed from a map script or global script, after
+	wait till spawn.
+
+	For example:
+
+		level waittill spawn
+
+		exec christmas.scr::night
+		exec christmas.scr::snow
+		exec christmas.scr::tree ( -992.33 -2901.28 -90 ) 
+
+	This file contains three mods. Snow, night and 
+	a christmas tree mod. The christmas tree mod is 
+	the only mod that should be executed with parameters.
+	The parameters are as shown below.
+
+Tree Mod:
+
+	exec christmas.scr::tree ( vector ) Coord,  ( vector ) angle ,  ( String ) tree file
+
+	Coord - origin where the tree should spawn. The coord must be given for a tree to spawn.
+	Angles - Angles for the tree to take
+	Tree File - This is the file to use for the tree's pattern.
+
+Snow Mod:
+	
+	exec christmas.scr::snow
+
+	Place in a map script and it will snow.
+
+Night Mod:
+
+	exec christmas.scr::night
+
+	Place in a map script and it will be dark.
+
+
+If you have any questions or problems, feel free to contact me or ask in the forums.
+
+		Contact Information
+
+	E-mail:  Elgan.sayer@gmail.com
+	Website: http://www.mods-r-us.net
+	
+	Feel free to ask any questions in the forums or by
+	email. 
+
+You are free to do with this peice of binary data as you wish. If you wish, Print it out and use it as..nm
+******************************************************* */
+
+
+//========================================================
+//   Night: Makes the map dark and the sky black
+//========================================================
+night:
+
+	$world.farplane_color = (0 0 0)
+	$world.farplane = 2500 // 6000
+	$world.farplane_cull = 1 // we're useing fastsky anyway
+
+	// Loop lala
+	while(1)
+	{
+		//wait some time and ask players to have no sky again
+
+		for(local.i = 1;local.i <= $player.size;local.i++)
+		{
+			
+			//tut
+			local.player = $player[local.i]
+			local.player stufftext ("r_fastsky 1")
+			
+			if(level.snow == 1)
+			{
+				local.player stufftext "cg_rain 1" 
+				if(local.player.gotsnow != 1)
+				{
+					local.player.gotsnow = 1
+				//	local.player thread givesnow 
+				}
+			}
+		}
+		wait 1
+	}
+end
+
+
+/* ********************************************************
+
+	The following threads are to do with the snow
+
+******************************************************* */
+
+
+//========================================================
+//   Snow: Makes the map snow
+//========================================================
+snow:
+	//top of church
+	/*
+	local.church_snow = spawn script_model
+	local.church_snow model "fx/dummy.tik"
+	local.church_snow notsolid
+	local.church_snow.origin =  ( -666 -78 1036 )
+	local.church_snow light 1 1 1 60000000 
+	thread light_hearted local.church_snow
+	*/
+
+	setcvar "cg_rain" "1" 
+	level.snow = 1
+end
+
+
+/* ********************************************************
+
+	The following threads are to do with the tree
+
+******************************************************* */
+
+
+//========================================================
+//   tree: Spawns a tree
+//	
+//	local.coord (vector) - Location to spawn the tree
+//	local.angles (vector) - Angles for tree
+//	local.treefile (string) - pattern file for tree
+//
+//========================================================
+tree local.coord local.angles local.treefile:
+	level.redc = 0
+	//set the tree file to use
+	if(local.treefile == NIL)
+	{
+		group.treefile = tree.txt
+	}
+	else
+	{
+		group.treefile = local.treefile
+	}
+
+	///rar ar ar blah blah, girls are stressy bitches
+	local.pattern = waitexec group.treefile::scale
+
+	//selfish
+	if(local.pattern == NIL)
+	{
+		//mother fucking
+		println "ERROR: Christmas tree pattern file is corrupt or missing"
+		end
+	}
+
+	// self centerd , 
+
+	//spitefull, i mean? wtf?, i dont even care! arogant
+//setcvar "developer" "1"
+	//spawn our tree
+	local.tree = spawn script_model 
+	local.tree model local.pattern[model] 
+	local.tree.origin = ( local.coord )
+	local.tree notsolid
+	local.tree scale local.pattern[scale] 
+
+	//set up snow , light effect at base of tree
+	local.tree light local.pattern[light]
+	local.tree lightRadius local.pattern[lightradius]
+		
+	//if we have no angles, or we do
+	if(local.angles != NIL)
+	{
+		local.tree.angles = local.angles
+	}
+	
+	//get new angles
+	//local.tree.angles += ( 0 90 0 )
+
+//Return with the tree but carry on the rest of the script. This gives users
+// the ability to do further things to the tree..
+thread carry_on_tree local.tree local.pattern
+end local.tree
+carry_on_tree local.tree local.pattern:
+
+	//make brighter
+	thread light_hearted local.tree	
+	//get the dimentions from the setting file/ i like files like that:\
+
+	//setup dimentions of the tree
+	local.tree.height = local.pattern[height]
+	local.tree.base_width = local.pattern[base_width]
+	local.tree.top_width = local.pattern[top_width]
+	local.tree.baseheight = local.pattern[baseheight]
+	local.tree.fairy_distance = local.pattern[fairy_distance]
+	local.tree.fairy_light_distance = local.pattern[fairy_light_distance]
+
+	if(level.work_out_dimensions == 1)
+	{
+		local.default_height = 440.00
+		local.default_base_width = 120
+		local.default_top_width = 20
+		local.default_baseheight = 140
+		
+		local.fairy_distance = 20.0
+		local.fairy_light_distance = 50.0
+
+		local.scaler = ( 1.0 / local.tree.scale )
+		local.tree.height = ( local.default_height / local.scaler )
+		local.tree.baseheight = ( local.default_baseheight / local.scaler )
+		local.tree.top_width = ( local.default_top_width / local.scaler )
+		local.tree.base_width = ( local.default_baseheight / local.scaler )
+
+		local.tree.fairy_distance = ( local.fairy_distance / local.scaler )
+		local.tree.fairy_light_distance = ( local.fairy_light_distance / local.scaler )
+	}
+
+	//spawn white light on top
+	local.fairy_light = spawn script_model
+	local.fairy_light model "fx/searchlight.tik"
+	local.fairy_light notsolid
+	local.fairy_light.origin = local.tree.origin + ( 0 0 ( local.tree.height + local.tree.fairy_light_distance ) )
+	local.fairy_light scale ( local.pattern[scale] * 5 )
+	//make brighter
+	thread light_hearted local.fairy_light
+
+	//spawn an angel
+	local.linn = spawn animate 
+	local.linn.model = "models/player/allied_manon.tik"
+	local.linn.origin = local.tree.origin + ( 0 0 ( local.tree.height + local.tree.fairy_distance ) ) 
+	local.linn.angles = local.tree.angles 
+	local.linn light 1.0 1.0 1.0 100	
+	local.linn.scale = ( local.pattern[scale] / 2.0 )
+
+	//make brighter
+	thread light_hearted local.linn
+	
+	//spawna  trigger to spar when the fairy is shot
+	local.fair_trigger = spawn trigger_multiple spawnflags 144 
+	local.fair_trigger.origin = local.fairy_light.origin - ( 0 0 30 )
+	local.fair_trigger light 1.0 1.0 1.0 100	
+	local.fair_trigger setsize ( -10 -10 -100 ) ( 10 10 100 )
+	local.fair_trigger setthread fairydust
+
+	//using pi, mm pi, sorry had to do that:\
+	exec global/maths.scr
+
+	//Load the decoration pattern. From this we can decorate the tree how told
+	local.pattern = waitexec group.treefile::decorate_pattern
+
+	//if the thread is missing,
+	if(local.pattern == NIL)
+	{
+		println "ERROR: Christmas tree pattern file is corrupt or missing"
+		end
+	}
+		
+//	local.decoration_layer[spawn_lights_spiral] = 0
+	//local.decoration_layer[1] = 0
+
+//	local.use_num = -1
+
+	//loop through the decorations putting them up on the tree.
+	for(local.i= 1;local.i <= local.pattern.size ;local.i++ )
+	{
+		//get the thread to decorate the tree with
+		local.decorate_thread = local.pattern[local.i][1] 
+		
+		//increase number for the array for the layer type
+		//local.use_num = local.decoration_layer[1].size + 1
+
+		//run the thread and decorate the tree
+		local.returned_info = waitthread local.decorate_thread local.tree local.pattern[local.i]
+		
+		//the coronas
+		local.decoration_layer[local.i][0] = local.returned_info[1]
+
+		//So we know what type of layer is in this section 
+		local.decoration_layer[local.i][1] = local.decorate_thread 
+
+		//the number of lights
+		local.decoration_layer[local.i][2] = local.returned_info[2]
+
+	}
+
+	//get the blink pattern from the tree file
+	local.blink_pattern = waitthread group.treefile::blink_pattern
+	
+	//Just incase they gave us no information
+	if(local.decoration_layer.size <= 0 || local.blink_pattern ==  NIL || local.blink_pattern.size <= 0)
+	{
+		// Give  a error message, so user can work out whats going on,
+		// tho they will most likely ask anyway and then neg you for making a mod that has errors
+		if(local.decoration_layer.size <= 0)
+		{
+			// huh?
+			println "Christmas mod: You want no decorations:S?"
+		}
+		else
+		{
+
+			// my tummy hurts right now:(
+			println "Christmas Mod: no blink information"
+		}
+
+		// Exit the mod, dont need to do no heavy looping
+		end
+	}
+
+	//Start looping the loop , Go through patterns of blinkness
+	while(1)
+	{
+		// Make all the lights flash and stuff
+		for(local.i = 1;local.i <= local.blink_pattern.size;local.i++)
+		{
+			//get the blink thread to run
+			local.thread = local.blink_pattern[local.i][1]
+
+			//If this is our wait
+			if(local.thread == "wait_for_time")
+			{
+				local.time = float ( local.blink_pattern[local.i][2] )
+
+				//some checking to make sure we dont crash from speedy ppl
+				if(local.time <= 0.00)
+				{
+					println "Christmas mad complaining: Dangerous use of wait_for_time, Time is to low, or badly done:|"
+				
+					//set a new time of 1 frame , Will save a couple of cycles
+					local.blink_pattern[local.i][2] = 0.05
+					local.time  = 0.05
+				}
+
+				wait local.time
+
+			}
+			else
+			{
+				// Should it wait or should it go?
+				local.wait_or_not = local.blink_pattern[local.i][2]
+
+				if(local.wait_or_not == 1)
+				{
+					//wait for the thread
+					waitthread local.thread local.decoration_layer local.blink_pattern[local.i]
+				}
+				else
+				{
+					//dont wait for this thread
+					thread local.thread local.decoration_layer local.blink_pattern[local.i]
+				}
+			}
+		}
+	}
+
+//bookmark 1
+
+end
+
+
+/* ********************************************************
+
+	The Following threads are to do with blinking 
+
+	sorry for crappy re-use of code, :D
+******************************************************** */
+
+
+//========================================================
+//   random_blink: random blink an element in the array
+//	
+//   local.ring_layer ( array ) 
+//   local.time ( float ) duration to blink for
+//========================================================
+random_blink local.ring_layer local.information: //local.ring_layer local.time:
+
+	//get time to wait
+	local.time = local.information[3]
+
+	//get a random layer
+	local.a_size = local.ring_layer.size 
+	local.a_size = randomint (local.a_size) + 1
+
+	//get the layer lights array from the layer array
+	local.ring_layer = local.ring_layer[local.a_size][0]
+
+	//pick a random element from size
+	local.a_size = local.ring_layer.size 
+	
+	//pick a light in the layyer from 0 to size by random
+	local.a_size = randomint (local.a_size) 
+
+	//get the light 
+	local.corona = local.ring_layer[local.a_size]
+
+	//blink it, for the amount of time
+	local.corona hide
+
+	wait local.time
+
+	local.corona show
+	
+
+end
+
+//========================================================
+//   loop_all_blink: Blinks all the sprial lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.time ( float ) duration to blink for
+//   local.spiral ( int ) spiral to blink
+//
+//========================================================
+spiral_all_blink  local.ring_layer local.information: //local.time:
+
+	//get time to wait
+	local.time = local.information[3]
+
+	//get which loop to blink
+	local.spiral = local.information[4]
+
+	//no ring number
+	if(local.spiral == NIL || local.spiral < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_spiral"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.spiral > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.spiral--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.spiral][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.spiral][0][local.i] hide
+	}
+
+	wait local.time
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.spiral][0][local.i] show
+	}
+	
+end
+
+//========================================================
+//   spiral_all_hide: hides all the sprial lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.spiral ( int ) spiral to blink
+//
+//========================================================
+spiral_all_hide  local.ring_layer local.information: //local.time:
+
+	//get which loop to blink
+	local.spiral = local.information[3]
+
+	//no ring number
+	if(local.spiral == NIL || local.spiral < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_spiral"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.spiral > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.spiral--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.spiral][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.spiral][0][local.i] hide
+	}
+
+end
+
+//========================================================
+//   spiral_all_show: shows all the sprial lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.spiral ( int ) spiral to blink
+//
+//========================================================
+spiral_all_show  local.ring_layer local.information: //local.time:
+
+	//get which loop to blink
+	local.spiral = local.information[3]
+
+	//no ring number
+	if(local.spiral == NIL || local.spiral < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_spiral"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.spiral > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.spiral--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.spiral][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.spiral][0][local.i] show
+	}
+
+end
+
+//========================================================
+//   loop_all_blink: Blinks all the ring lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.time ( float ) duration to blink for
+//   local.loop ( int ) loop to blink
+//
+//========================================================
+loop_all_blink  local.ring_layer local.information: //local.time:
+
+	//get time to wait
+	local.time = local.information[3]
+
+	//get which loop to blink
+	local.loop = local.information[4]
+
+	//no ring number
+	if(local.loop == NIL || local.loop < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.loop][0][local.i] hide
+	}
+
+	wait local.time
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.loop][0][local.i] show
+	}
+	
+end
+
+//========================================================
+//   loop_all_hide: Hides all the ring lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.loop ( int ) loop to blink
+//
+//========================================================
+loop_all_hide  local.ring_layer local.information: //local.time:
+
+	//get which loop to blink
+	local.loop = local.information[3]
+
+	//no ring number
+	if(local.loop == NIL || local.loop < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.loop][0][local.i] hide
+	}
+end
+
+//========================================================
+//   loop_all_show: Shows all the ring lights at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.loop ( int ) loop to blink
+//
+//========================================================
+loop_all_show  local.ring_layer local.information: //local.time:
+
+	//get which loop to blink
+	local.loop = local.information[3]
+
+	//no ring number
+	if(local.loop == NIL || local.loop < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	//go through all the lights and hide thema nd then show em again
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop][0].size
+
+	for(local.i = 0; local.i <= local.number_of_lights - 1; local.i++)
+	{
+		local.ring_layer[local.loop][0][local.i] show
+	}
+end
+
+//========================================================
+//   ring_blink: Blinks all the elements in a given 
+//		 ring at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.time ( float ) duration to blink for
+//   local.ring_number ( int ) ring in loop to blink
+//   local.loop_number ( int ) loop to blink
+//
+//========================================================
+ring_blink local.ring_layer local.information: //local.time:
+
+	//get time to wait
+	local.time = local.information[3]
+
+	//loop number
+	local.loop_number = local.information[4]
+
+	//get ring number
+	local.ring_number = local.information[5]
+
+	//no ring number
+	if(local.ring_number == NIL || local.ring_number < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop_number > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop_number--
+	local.ring_number--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop_number][2]
+	local.start = ( local.ring_number * local.number_of_lights ) 
+	local.end = local.start + local.number_of_lights
+	
+	// err ehh hmm :\
+	local.end--
+	
+	//ring number way to high
+	if(local.end > local.ring_layer[local.loop_number][0].size)
+	{
+		end
+	}
+
+	//get the actual lights for this loop
+	local.ring_layer = waitthread get_light_between local.start local.end local.ring_layer[local.loop_number][0]
+
+	//blink em
+	local.ring_layer_size = local.ring_layer.size
+
+	for(local.i = 0; local.i <= local.ring_layer_size - 1; local.i++)
+	{
+		local.ring_layer[local.i] hide
+	}
+	
+	wait local.time
+
+	for(local.i = 0; local.i <= local.ring_layer_size - 1; local.i++)
+	{
+		local.ring_layer[local.i] show
+	}
+	
+end
+
+//========================================================
+//   ring_hide: hide all the elements in a given 
+//		ring at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.ring_number ( int ) ring in loop to blink
+//   local.loop_number ( int ) loop to blink
+//
+//========================================================
+ring_hide local.ring_layer local.information: //local.time:
+
+	//loop number
+	local.loop_number = local.information[3]
+
+	//get ring number
+	local.ring_number = local.information[4]
+
+	//no ring number
+	if(local.ring_number == NIL || local.ring_number < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop_number > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop_number--
+	local.ring_number--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop_number][2]
+	local.start = ( local.ring_number * local.number_of_lights ) 
+	local.end = local.start + local.number_of_lights
+	
+	// err ehh hmm :\
+	local.end--
+	
+	//ring number way to high
+	if(local.end > local.ring_layer[local.loop_number][0].size)
+	{
+		end
+	}
+
+	//get the actual lights for this loop
+	local.ring_layer = waitthread get_light_between local.start local.end local.ring_layer[local.loop_number][0]
+
+	//hide em
+	local.ring_layer_size = local.ring_layer.size
+
+	for(local.i = 0; local.i <= local.ring_layer_size - 1; local.i++)
+	{
+		local.ring_layer[local.i] hide
+	}
+		
+end
+
+//========================================================
+//   ring_show: unhides all the elements in a given 
+//		ring at once
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.ring_number ( int ) ring in loop to blink
+//   local.loop_number ( int ) loop to blink
+//
+//========================================================
+ring_show local.ring_layer local.information: //local.time:
+
+	//loop number
+	local.loop_number = local.information[3]
+
+	//get ring number
+	local.ring_number = local.information[4]
+
+	//no ring number
+	if(local.ring_number == NIL || local.ring_number < 0 )
+	{
+		end
+	}
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop_number > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop_number--
+	local.ring_number--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop_number][2]
+	local.start = ( local.ring_number * local.number_of_lights ) 
+	local.end = local.start + local.number_of_lights
+	
+	// err ehh hmm :\
+	local.end--
+	
+	//ring number way to high
+	if(local.end > local.ring_layer[local.loop_number][0].size)
+	{
+		end
+	}
+
+	//get the actual lights for this loop
+	local.ring_layer = waitthread get_light_between local.start local.end local.ring_layer[local.loop_number][0]
+
+	//show em
+	local.ring_layer_size = local.ring_layer.size
+
+	for(local.i = 0; local.i <= local.ring_layer_size - 1; local.i++)
+	{
+		local.ring_layer[local.i] show
+	}
+		
+end
+
+//========================================================
+//   sequence_ring_blink: blink each light in the ring
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.clockwise ( integer ) direction to blink in
+//   local.time ( float ) time to wait for
+//
+//========================================================
+sequence_ring_blink local.ring_layer local.information: // local.clockwise local.time:
+	
+	//get time to wait
+	local.time = local.information[3]
+
+	//loop number
+	local.clockwise = local.information[4]
+
+	//loop number
+	local.loop_number = local.information[5]
+
+	//get ring number
+	local.ring_number = local.information[6]
+
+	//yeah ok i copied nad pasted from above!!..know what im sayin? whateverrr
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_loop"
+	
+	local.ring_layer_size = local.ring_layer.size
+	
+	//loop number way off
+	if(local.loop_number > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.loop_number--
+	local.ring_number--
+
+	//get the start and end numbers of the lights in the loop we want to blink
+	local.number_of_lights =  local.ring_layer[local.loop_number][2]
+	local.start = ( local.ring_number * local.number_of_lights ) 
+	local.end = local.start + local.number_of_lights
+	
+	// err ehh hmm :\
+	local.end--
+	
+	//ring number way to high
+	if(local.end > local.ring_layer[local.loop_number][0].size)
+	{
+		end
+	}
+
+	//get the actual lights for this loop
+	local.ring_layer = waitthread get_light_between local.start local.end local.ring_layer[local.loop_number][0]
+
+	//blink em
+	local.ring_layer_size = local.ring_layer.size
+
+	if(local.clockwise == 1)
+	{
+		local.add = 1
+		local.start = 0
+		local.end  = local.ring_layer.size - 1
+	}
+	else
+	{
+		local.start = local.ring_layer.size - 1
+		local.add = -1
+		local.end  = 0
+	}
+
+	for(local.i = local.start;local.i != local.end ;local.i+= local.add )
+	{
+		local.ring_layer[local.i] hide
+		wait local.time
+		local.ring_layer[local.i] show
+	}
+	
+end
+
+//========================================================
+//   sequence_ring_blink: blink each light in the ring
+//	
+//   local.ring_layer ( array ) layer to blink
+//   local.up ( integer ) direction to blink in
+//   local.time ( float ) time to wait for
+//
+//========================================================
+sequence_spiral_blink local.ring_layer local.information: 
+	
+	//get time to wait
+	local.time = local.information[3]
+
+	//travel up or down
+	local.up = local.information[4]
+
+	//spiral number
+	local.spiral = local.information[5]
+
+	//yeah ok i copied nad pasted from above!!..know what im sayin? whateverrr
+
+	//get all the ring loop layers
+	local.ring_layer = waitthread get_all_layers_from_type local.ring_layer "spawn_lights_spiral"
+	
+	local.ring_layer_size = local.ring_layer.size
+	
+	//spiral number way off
+	if(local.spiral > local.ring_layer_size)
+	{
+		end
+	}
+	
+	//get number for the layer
+	local.spiral--
+
+	
+	//blink em
+	local.ring_layer_size = local.ring_layer[local.spiral][0].size
+
+	if(local.up == 1)
+	{
+		local.add = 1
+		local.start = 0
+		local.end  = local.ring_layer_size - 1
+	}
+	else
+	{
+		local.start = local.ring_layer_size - 1
+		local.add = -1
+		local.end  = 0
+	}
+
+	for(local.i = local.start;local.i != local.end ;local.i+= local.add )
+	{
+		local.ring_layer[local.spiral][0][local.i] hide
+		wait local.time
+		local.ring_layer[local.spiral][0][local.i] show
+	}
+	
+end
+
+//========================================================
+//   get_light_between: gets all the lights from the 
+//			array of lights that we want for 
+//			just one ring, loop
+//	
+// local.start ( integer ) - Where to get lights from 
+// local.end ( integer ) - where to finish getting lights
+// local.layers ( array ) - Where to get light ents from
+//========================================================
+get_light_between local.start local.end local.layers:
+
+	local.t = 0
+	for(local.i = local.start; local.i <= local.end; local.i++)
+	{
+		local.lights[local.t] = local.layers[local.i]
+		local.t++
+	}
+
+end local.lights
+
+//========================================================
+//   get_all_layers_from_type: get all the layers of 
+//			       a type and group them in an
+//			       array
+//	
+// local.type ( string ) - Type of layer we want to group
+//========================================================
+get_all_layers_from_type local.ring_layer local.type:
+
+	local.found = 0
+	//loop through and see if the layers are the type of layer 
+	//we want, put all the ones we want together and exit
+	for(local.i = 0; local.i <= local.ring_layer.size ; local.i++)
+	{
+		if(local.ring_layer[local.i][1] == local.type)
+		{
+			local.layers[local.found] = local.ring_layer[local.i]
+			local.found++
+		}
+	}
+
+end local.layers
+
+
+/* ********************************************************
+
+    The Following threads are to do spawning decations 
+
+******************************************************** */
+
+
+//========================================================//========================================================
+//   spawn_lights_spiral: Spawn a loop of lights that spirals down 
+//
+//	local.rings ( integer ) - How many ring's of light to spawn?
+//	local.tree (entity) - the tree/base to spawn lights round
+//	local.degrees_apart  ( int ) - The integer in degrees to form the distance between lights
+//	local.clockwise ( integer ) - Spawn them clockwise
+//	local.colour ( String ) - The colour/thread to use to spawn the lights
+//	local.link  ( integer ) - If 1 the coronas will link using a func beam
+//	local.linkcolour ( vector ) - Colour to use for the func beam should it be used.
+//	local.numsegments ( integer ) - NUmber of sections to use for the tree func beams
+//	local.scale ( float ) - Scale for each corona, if NIL, default scale will be used.
+//
+//	Returns - Array of the coronas spawned
+//========================================================//========================================================
+spawn_lights_spiral local.tree local.pattern: //local.clockwise local.rings local.degrees_apart local.colour local.link local.linkcolour local.numsegments local.scale:
+
+	//do we go clockwise?
+	local.clockwise = int ( local.pattern[2] )
+
+	//get amount of rings to spawn
+	local.rings = int ( local.pattern[3] )
+
+	//get the distance /radius/diameter,
+	local.degrees_apart = int ( local.pattern[4] )
+
+	//What colour to use
+	local.colour = local.pattern[5]
+
+	//link them with funcbeam
+	local.link = int ( local.pattern[6] )
+
+	//If we want to link
+	if(local.link == 1)
+	{
+		//funccolour
+		local.linkcolour = local.pattern[7]
+
+		//func num of segments
+		local.numsegments = int ( local.pattern[8] )
+	}
+
+	//new thing
+	{
+		local.tmp_scale = local.pattern[9]
+
+		if(local.tmp_scale != NIL)
+		{
+			//get a new scale
+			local.scale = float ( local.tmp_scale )
+		}
+	}
+
+	//clear the array
+	local.pattern = NIL
+
+	if(local.colour == "random")
+	{
+		//get the threads colours
+		local.colourthreads = waitthread colourthreads
+	
+		//pick one randomly
+		local.c = randomint(local.colourthreads.size) + 1
+		local.colour = local.colourthreads[local.c][1]
+	}
+	
+	if(local.colour == "pattern")
+	{
+		//get the threads colours
+		local.colourthreads = waitexec group.treefile::loop_colour_pattern
+		local.colourthreads_size = local.colourthreads.size
+		local.colour = local.colourthreads[1][1]
+		local.pattern = 1
+		local.c = 1
+	}
+
+
+
+	//some error checking 
+	if(local.degrees_apart == NIL || local.degrees_apart < 1)
+	{
+		println "ERROR: dangerous useage of thread spawn_lights_spiral in script christmas.scr"
+		println ( "ERROR: ^^^^ see thread " + parm.previousthread)
+		local.degrees_apart = 10
+	}
+
+	//Count the lights into the array, initilize the counter
+	local.lights = 0
+
+	//set height
+	local.height = local.tree.baseheight
+
+	//height to drop spiral each light
+	local.gain_height = ( local.tree.height - local.height ) / local.rings
+
+	//get the correct height
+	local.number_of_lights = ( 360 / local.degrees_apart )
+	local.gain_height = (local.gain_height / local.number_of_lights)
+
+	//how many rings high?
+	local.rings = 360 * local.rings
+
+	//set the base height
+	local.baseheight = local.height
+
+	if(local.clockwise == 1)
+	{
+		local.start = 0
+		local.end = local.rings
+		local.add = local.degrees_apart
+	}
+	else
+	{
+		local.start = local.rings
+		local.end = 0
+		local.add = ( 0 - local.degrees_apart )
+	}
+
+	//loop from 0 to 360, increasing be the distance apart. This will be the degrees apart. I guess i could make it the number of lights u want but meh, no one will use my scripts anyway
+	for( local.i = local.start ;local.i != local.end ;local.i += local.add )
+	{
+		//get the correct distance from the tree 
+		local.radius = waitthread get_distance local.tree local.height
+
+		// get the base location 
+		local.location = local.tree.origin 
+		//work out the radians from degrees to send to work out the cos
+		local.radian = (( local.i  * level.PI) / 180 )
+	
+		//work out cos and sin maths , ty jv:)
+		local.cos = ( waitexec global/maths.scr::cos local.radian * local.radius )
+		local.sin = ( waitexec global/maths.scr::sin local.radian * local.radius )
+
+		// get the new location of the corona along the lovely circle
+		local.location = local.location + ( local.sin local.cos local.height )
+
+		//spawn the light
+		local.return = waitthread local.colour local.location local.last_colour
+
+		//get correct feedback
+		if(local.colour == "different")
+		{
+			//for different types, save last colour
+			local.last_colour = local.return[2]
+
+			local.corona[local.lights] = local.return[1]
+		}
+		else
+		{
+			local.corona[local.lights] = local.return
+		}
+
+		//raise the height of each light
+		local.height += local.gain_height
+		
+		//for different types, save last colour
+		local.last_colour = local.colour
+
+		//if wanted, set the scale
+		if(local.scale)
+		{
+			local.corona[local.lights] scale local.scale
+		}
+
+		//link the lights up
+		if(local.link == 1)
+		{
+			if(local.lights > 0)
+			{
+				local.last = local.lights - 1
+				local.tinsel[local.lights] = waitthread link local.corona[local.last] local.corona[local.lights] local.linkcolour local.numsegments
+			}
+		}
+		//inc
+		local.lights++
+
+
+		//if we are using a pattern for the colours, go to the next colour
+		if(local.pattern == 1)
+		{
+			local.c++
+			if(local.c > local.colourthreads_size )
+			{
+				local.c = 1
+			}
+
+			//get the threads colours
+			local.colour = local.colourthreads[local.c][1]
+		}
+
+	}
+
+end (local.corona::local.number_of_lights)
+
+//========================================================//========================================================
+//   spawn_lights_loop: Spawn a loop of coronas arround
+//			the base of the tree. 
+
+//	local.rings ( integer ) - How many ring's of light to spawn?
+//	local.tree (entity) - the tree/base to spawn lights round
+//	local.degrees_apart  ( int ) - The integer in degrees to form the distance between lights
+//	local.colour ( String ) - The colour/thread to use to spawn the lights
+//	local.link  ( integer ) - If 1 the coronas will link using a func beam
+//	local.linkcolour ( vector ) - Colour to use for the func beam should it be used.
+//	local.numsegments ( integer ) - NUmber of sections to use for the tree func beams
+//	local.scale ( float ) - Scale for each corona, if NIL, default scale will be used.
+//
+//	Returns - Array of the coronas spawned
+//========================================================//========================================================
+spawn_lights_loop local.tree local.pattern: //local.tree local.rings local.degrees_apart local.colour local.link local.linkcolour local.numsegments local.scale:
+	
+	//get amount of rings to spawn
+	local.rings = int ( local.pattern[2] )
+
+	//get the distance /radius/diameter,
+	local.degrees_apart = int ( local.pattern[3] )
+
+	//What colour to use
+	local.colour = local.pattern[4]
+
+	//link them with funcbeam
+	local.link = int ( local.pattern[5] )
+
+	//If we want to link
+	if(local.link == 1)
+	{
+		//funccolour
+		local.linkcolour = local.pattern[6]
+
+		//func num of segments
+		local.numsegments = int ( local.pattern[7] )
+	}
+
+	//new thing
+	{
+		local.tmp_scale = local.pattern[7]
+
+		if(local.tmp_scale != NIL)
+		{
+			//get a new scale
+			local.scale = float ( local.tmp_scale )
+		}
+	}
+
+	//clear the array
+	local.pattern = NIL
+
+	if(local.colour == "random")
+	{
+		//get the threads colours
+		local.colourthreads = waitthread colourthreads
+		//pick one randomly
+		local.c = randomint(local.colourthreads.size) + 1
+		local.colour = local.colourthreads[local.c][1]
+	}
+	else if(local.colour == "pattern")
+	{
+		//get the threads colours
+		local.colourthreads = waitexec group.treefile::loop_colour_pattern
+		local.colourthreads_size = local.colourthreads.size
+		local.colour = local.colourthreads[1][1]
+		local.pattern = 1
+		local.c = 1
+	}
+
+	//some error checking 
+	if(local.degrees_apart == NIL || local.degrees_apart < 1)
+	{
+		println "ERROR: dangerous useage of thread spawn_lights_loop in script christmas.scr"
+		println ( "ERROR: ^^^^ see thread " + parm.prevousthread)
+		local.degrees_apart = 10
+	}
+
+	//set height
+	local.height = local.tree.baseheight
+	
+	//Count the lights into the array, initilize the counter
+	local.lights = 0
+
+	//height to raise for each ring
+	local.gain_height = ( local.tree.height - local.height ) / local.rings
+
+	//get number of lights
+	local.number_of_lights = ( 360 / local.degrees_apart )
+
+	//EMS
+	for(local.ring_number = 0; local.ring_number <= local.rings - 1 ;local.ring_number++ )
+	{
+		//if we are to use a random colour then pick one
+		if(local.pattern == 1)
+		{
+			if(local.colour == "random")
+			{
+				//get the threads colours
+				local.random_colourthreads = waitthread colourthreads
+				//pick one randomly
+				local.cu = randomint(local.random_colourthreads.size) + 1
+				local.colour = local.random_colourthreads[local.cu][1]
+			}
+		}
+
+		//loop from 0 to 360, increasing be the distance apart. This will be the degrees apart. I guess i could make it the number of lights u want but meh, no one will use my scripts anyway
+		for(local.i = 0;local.i < 360;local.i+=local.degrees_apart)
+		{
+			//get the correct distance from the tree 
+			local.radius = waitthread get_distance local.tree local.height
+
+			// get the base location 
+			local.location = local.tree.origin 
+			//work out the radians from degrees to send to work out the cos
+			local.radian = (( local.i  * level.PI) / 180 )
+		
+			//work out cos and sin maths , ty jv:)
+			local.cos = ( waitexec global/maths.scr::cos local.radian  * local.radius )
+			local.sin = ( waitexec global/maths.scr::sin local.radian  * local.radius )
+
+			// get the new location of the corona along the lovely circle
+			local.location = local.location + ( local.sin local.cos local.height )
+	
+			//spawn the light
+			local.return = waitthread local.colour local.location local.last_colour
+	
+			//get correct feedback
+			if(local.colour == "different")
+			{
+				//for different types, save last colour
+				local.last_colour = local.return[2]
+
+				local.corona[local.lights] = local.return[1]
+			}
+			else
+			{
+				local.corona[local.lights] = local.return
+			}
+
+
+			//if wanted, set the scale
+			if(local.scale)
+			{
+				local.corona[local.lights] scale local.scale
+			}
+
+			//link the lights up
+			if(local.link == 1)
+			{
+				if(local.i  > 0)
+				{
+					local.last = local.lights - 1
+					local.tinsel[local.lights] = waitthread link local.corona[local.last] local.corona[local.lights] local.linkcolour local.numsegments
+				}
+			}
+
+			//inc
+			local.lights++
+		}
+
+		//if we are using a pattern for the colours, go to the next colour
+		if(local.pattern == 1)
+		{
+			local.c++
+			if(local.c > local.colourthreads_size )
+			{
+				local.c = 1
+			}
+
+			//get the threads colours
+			local.colour = local.colourthreads[local.c][1]
+		}
+
+		//go to next ring
+		local.height += local.gain_height
+	}
+
+end (local.corona::local.number_of_lights)
+
+/* ********************************************************
+
+    The Following threads are the sub threads for 
+    spawning decations 
+
+******************************************************** */
+
+
+//========================================================
+//   link: Spawn a link between 2 points.
+//========================================================
+link local.startcorona local.endcorona local.colour local.numsegments:
+
+	if(local.numsegments == NIL)
+	{
+		local.numsegments = 1
+	}
+
+	//the colour is red, two red lights are spawned instead of one, to make them more prominent
+	if(local.startcorona.size > 1)
+	{
+		local.startcorona = local.startcorona[1]
+	}
+
+	if(local.endcorona.size > 1)
+	{
+		local.endcorona = local.endcorona[1]
+	}
+
+	local.beam = spawn funcbeam
+	local.beam.origin = local.startcorona.origin
+	local.beam endpoint local.endcorona.origin
+	local.beam color local.colour 
+	local.beam numsegments local.numsegments
+	local.beam activate 
+
+end
+
+//========================================================
+//   redcorona: Spawn a red corona
+//========================================================
+redcorona local.origin:
+
+	//spawn two red beams because they are frikkin hard to see
+	local.red1 = spawn script_model model "fx/corona_red.tik"
+	local.red1.origin = local.origin
+	local.red1 notsolid
+	
+	///red one seems smaller
+	local.red1.scale = 2
+
+	local.red2 = spawn script_model model "fx/corona_red.tik"
+	local.red2.origin = local.origin
+	local.red2 notsolid
+
+	//Red one seems smaller
+	local.red2.scale = 2
+	
+end (local.red1::local.red2)
+
+//========================================================
+//   orangecorona: Spawn an orange corona
+//========================================================
+orangecorona local.origin:
+
+	local.orange = spawn script_model model "static/corona_orange.tik" 
+	local.orange.origin = local.origin
+	local.orange notsolid
+
+end local.orange
+
+//========================================================
+//   regcorona: Spawn a regular corona
+//========================================================
+regcorona local.origin:
+
+	local.reg = spawn script_model model "static/corona_reg.tik" 
+	local.reg.origin = local.origin
+	local.reg notsolid
+
+end local.reg
+
+//========================================================
+//   utilcorona: Spawn a util-er:S? corona
+//========================================================
+utilcorona local.origin:
+
+	local.util = spawn script_model model "static/corona_util.tik" 
+	local.util.origin = local.origin
+	local.util notsolid
+
+end local.util
+
+//========================================================
+//   red light
+//========================================================
+redlight local.origin:
+
+	local.redlight = spawn script_model model "fx/searchlight.tik" spawnflags 1
+	local.redlight.origin = local.origin
+	local.redlight notsolid
+	local.redlight rendereffects "+viewlensflare"
+	local.redlight light  1.0 0.0 0 0.01
+
+end local.redlight
+
+//========================================================
+//   blue light
+//========================================================
+bluelight local.origin:
+
+	local.bluelight = spawn script_model model "fx/searchlight.tik" spawnflags 1
+	local.bluelight.origin = local.origin
+	local.bluelight light  0.0 0.0 1 0.01
+	local.bluelight notsolid
+	local.bluelight rendereffects "+viewlensflare"
+
+end local.bluelight
+
+//========================================================
+//   green light
+//========================================================
+greenlight local.origin:
+
+	local.greenlight = spawn script_model model "fx/searchlight.tik" spawnflags 1
+	local.greenlight.origin = local.origin
+	local.greenlight light  0.0 1.0 0 0.01
+	local.greenlight notsolid
+	local.greenlight rendereffects "+viewlensflare"
+
+end local.greenlight
+
+//========================================================
+//   yellow light
+//========================================================
+yellowlight local.origin:
+
+	local.yellowlight = spawn script_model model "fx/searchlight.tik" spawnflags 1
+	local.yellowlight.origin = local.origin
+	local.yellowlight light 0.9 0.7 0 0.01
+	local.yellowlight notsolid
+	local.yellowlight rendereffects "+viewlensflare"
+
+end local.yellowlight
+
+//========================================================
+//   white light
+//========================================================
+whitelight local.origin:
+
+	local.whitelight = spawn script_model model "fx/searchlight.tik" spawnflags 1
+	local.whitelight.origin = local.origin
+	local.whitelight notsolid
+	local.whitelight rendereffects "+viewlensflare"
+
+end local.whitelight
+
+//========================================================
+//   different: Spawn a corona with a different color 
+//		to its predecessor
+//========================================================
+different local.origin local.lastcolour:
+
+	//get the threads colours
+	local.colourthreads = waitthread colourthreads
+
+	//loop without a while loop. so no waitframe and no error
+	for(local.finished = 0; local.finished != 1;local.finished = local.finished)
+	{
+		//pick one randomly
+		local.c = randomint(local.colourthreads.size) + 1
+		local.colour = local.colourthreads[local.c][1]
+
+		if(local.colour != local.lastcolour)
+		{
+			//get a colour
+			local.different = waitthread local.colour local.origin
+			end (local.different::local.colour )
+		}
+	}
+
+end 
+
+//========================================================
+//   all_random: Spawn a corona random colourd corona
+//		
+//========================================================
+all_random local.origin:
+
+
+	//get the threads colours
+	local.colourthreads = waitthread colourthreads
+	//pick one randomly
+	local.c = randomint(local.colourthreads.size) + 1
+	local.colour = local.colourthreads[local.c][1]
+
+
+	local.all_random = waitthread local.colour local.origin
+
+end local.all_random
+
+//========================================================
+//   colourthreads: contains an array of 
+//		    threads to the spawn 
+//		    colours 
+//========================================================
+colourthreads:
+
+	local.colours = makearray
+	"redcorona"
+	"orangecorona"
+	"regcorona"
+	"redlight"
+	"bluelight"
+	"yellowlight"
+	"whitelight"
+	//"utilcorona"
+	endarray
+
+end local.colours 
+
+//========================================================
+//   get_distance: gets the correct radius/diameter 
+//		   for the ring
+//========================================================
+get_distance local.tree local.height:
+end (local.tree.base_width -  (local.tree.base_width - local.tree.top_width) / (local.tree.height - local.tree.baseheight) * (local.height - local.tree.baseheight) )
+
+
+/* ********************************************************
+
+    The Following threads are extra stuff
+
+******************************************************** */
+
+
+//========================================================
+//   fairydust: Called for when the fairy
+//		on the tree is shot
+//========================================================
+fairydust:
+
+	local.snow = spawn script_model model models/emitters/welding_spark.tik origin self.origin
+	local.snow commanddelay 2.0 remove
+
+end
+
+//========================================================
+//   light_hearted: Changed some of the effects drawn on 
+//		    the parsed entity to make it glow more
+//========================================================
+light_hearted local.entity:
+
+	//no longer supported
+	//local.entity rendereffects "+betterlighting"
+	
+	//no longer supported
+	//local.entity rendereffects "+minlight"
+
+	//no longer supported
+	//local.entity rendereffects "+fullbright"
+
+	local.entity rendereffects "+additivedynamiclight"
+
+	//local.entity rendereffects "+lightstyledynamiclight "
+	//local.entity lightStyle 2
+
+end

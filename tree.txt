@@ -1,0 +1,420 @@
+// This file contains the instructions for the tree. To tell it how to display and what to to do.
+// This file is part of the christmas mod. It is executed by christmas.scr.
+
+/*.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:.
+
+			Christmas Mod Pattern file
+		
+                   _...Q._
+                 .'       '.
+                /           \
+               ;.-""""--.._ |
+              /'-._____..-'\|
+            .' ;  o   o    |`;
+           /  /|   ()      ;  \
+      _.-, '-' ; '.__.-'    \  \
+  .-"`,  |      \_         / `'`
+   '._`.; ._    / `'--.,_=-;_
+      \ \|  `\ .\_     /`  \ `._
+       \ \    `/  ``---|    \   (~  _______________________
+        \ \.  | o   ,   \    (~ (~ |.---------------------.|
+         \ \`_\ _..-'    \  (\(~   || Released 23/12/2005 ||	
+          \/  ``        / \(~/     || Updated: 05/12/2006 ||
+           \__    __..-' -   '.    || By Elgan Sayer      ||
+            \ \```             \   || www.mods-r-us.net   ||
+            ;\ \o               ;  || Merry Christmas	  ||
+            | \ \               |  ||_____________________||
+            ;  \ \              ;  '-----------..----------'
+             \  \ \ _.-'\      /               ||
+              '. \-'     \   .'                ||
+             _.-"  '      \-'                .-||-.
+             \ '  ' '      \		     '..---.- '
+              \  ' '      _.'
+               \' '   _.-'
+                \ _.-'
+                 ` 
+		
+	
+	By editing this file, you can create different looks for your christmas tree.
+	You can also setup from this file how you want it to flash, blink, animate itself.
+	
+.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:.*/
+
+//========================================================
+//		Added 05 December 2006 
+//
+//	* Spiral Now works with "pattern" colour type also.
+//	* Tree is not scaleable with default base scale
+//	  settings. level.work_out_dimensions must be set 1
+//	  for the tree to work out its dimensions. This is 
+//	  so u can edit the look of the tree further. wha
+//	* For fun and guessing demand. Added lights like
+//	  from swedish god Ric-Hard's mod. With the lense-
+//	  flare and all. Tho these are not reacomended for 
+//	  tree use. They are in by default anyway.
+//	* Added some more options as settings to the "scale"
+//	  part of the tree pattern file.
+//	
+//
+//========================================================
+
+
+//========================================================
+//		Contact Information
+//
+//	E-mail:  Elgan.sayer@gmail.com
+//	Website: http://www.mods-r-us.net
+//	
+//	Feel free to ask any questions in the forums or by
+//	email. 
+//
+//========================================================
+
+
+//========================================================
+//	scale: This sets up the scale of the tree
+//========================================================
+scale:
+	//Set the dimensions of the tree. THe lights will spawn using these dimensions.
+	// eg, top most lioghts till be at 440 above tree origin.
+
+	local.tree[height] = 440.00	  // Height of the tree
+	local.tree[base_width] = 120	  // Width of the base at base height
+	local.tree[top_width] = 20	  // Width of the top of the tree
+	local.tree[baseheight] = 140	  // Height at which we start drawing lights
+	local.tree[fairy_distance] = 20.0 // Distance fairy is from height of tree
+	local.tree[fairy_light_distance] = 50.0	// Distance fairy light is from height of tree
+
+	level.work_out_dimensions = 1     //If this is set 1, ALl the above dimensions
+					  // are ignored and worked out by the tree scale.
+					  // If set to 0, the above dimensions are used. 
+	local.tree[scale] = 2 // scale of the tree.
+	local.tree[light] = ( 0 0 0 )     // Light/ snow effect colour at tree 
+	local.tree[lightradius] = 000		// Light/ snow effect radius at tree 
+	local.tree[model] = "static/tree_winter_midpine.tik" //tree model
+	
+end local.tree
+
+//========================================================
+// decorate_pattern:  This sets up how the tree looks
+//		      when it spawns. What the colour's
+//		      are and in what way they spawn.
+//========================================================
+decorate_pattern:
+	
+	/*
+	//
+	The following are a list of threads that exist inside
+	the Christmas script.
+
+	//Threads
+	'spawn_lights_spiral'
+		//========================================================//========================================================
+		//   spawn_lights_spiral: Spawn a loop of lights that spirals down 
+		//
+		//	spawn_lights_spiral local.clockwise local.rings local.degrees_apart local.colour local.link local.linkcolour local.numsegments local.scale:
+		//
+		//	local.rings ( integer ) - How many ring's of light to spawn?
+		//	local.degrees_apart  ( int ) - The integer in degrees to form the distance between lights
+		//	local.clockwise ( integer ) - Spawn them clockwise
+		//	local.colour ( String ) - The colour/thread to use to spawn the lights
+		//	local.link  ( integer ) - If 1 the coronas will link using a func beam
+		//	local.linkcolour ( vector ) - Colour to use for the func beam should it be used.
+		//	local.numsegments ( integer ) - Number of sections to use for the tree func beams
+		//	local.scale ( float ) - Scale for each corona, if NIL, default scale will be used.
+		//
+		//	Returns - Array of the coronas spawned
+		//========================================================//========================================================
+	'spawn_lights_loop'
+		//========================================================//========================================================
+		//   spawn_lights_loop: Spawn a loop of coronas around
+		//			the base of the tree. 
+		//
+		//	spawn_lights_loop local.rings local.degrees_apart local.colour local.link local.linkcolour local.numsegments local.scale:
+		//
+		//	local.rings ( integer ) - How many ring's of light to spawn?
+		//	local.degrees_apart  ( int ) - The integer in degrees to form the distance between lights
+		//	local.colour ( String ) - The colour/thread to use to spawn the lights
+		//	local.link  ( integer ) - If 1 the coronas will link using a func beam
+		//	local.linkcolour ( vector ) - Colour to use for the func beam should it be used.
+		//	local.numsegments ( integer ) - Number of sections to use for the tree func beams
+		//	local.scale ( float ) - Scale for each corona, if NIL, default scale will be used.
+		//
+		//	Returns - Array of the coronas spawned
+		//========================================================//========================================================
+	//
+	*/
+
+	// Available Colour Threads //
+	/*
+	'redcorona'		- Red
+	'orangecorona'		- Orange
+	'regcorona'		- White	
+	
+	"redlight"		- Red light with lensflare
+	"bluelight"		- Blue light with lensflare
+	"yellowlight"		- Yellow light with lensflare
+	//"whitelight"		- White light with lensflare	
+	//'utilcorona'		- White // Not used
+	
+	'random'		- All the same random colour
+	'different'		- Each colour is different the last
+	'all_random'		- All colours are randomly picked
+	'pattern'		- Use the loop_colour_pattern thread in this file to determine the colour of each ring
+	*/
+
+	// Edit how you want the tree to look here:
+
+	
+	//Setup a table to hold the information on the tree lights pattern
+	local.spawn_pattern = makearray
+	
+	//spawn a set of loops		//rings?		//distance between coronas	//what colour to use?		//Link with a func beam		//Colour of funcBeam		//number of segments for fun beam if used		//Scale of the coronas
+	"spawn_lights_loop"		"6"			"15"				"pattern"			"1"				( 0.0 0.0 1.0 )			"1"							"1"
+
+	//spawn a spiral		//clockwise		//rings			//distance between coronas	//what colour to use?		//Link with a func beam		//Colour of funcBeam		//number of segments for fun beam if used		//Scale of the coronas
+	"spawn_lights_spiral"		"0"			"6"			"10"				"pattern"			"1"				( 1.0 1.0 1.0 )			"1"							"2"	
+	
+	//spawn a spiral		//clockwise		//rings			//distance between coronas	//what colour to use?		//Link with a func beam		//Colour of funcBeam		//number of segments for fun beam if used		//Scale of the coronas
+	//"spawn_lights_spiral"		"1"			"6"			"10"				"pattern"			"1"				( 1.0 1.0 1.0 )			"1"							"1"	
+
+	endarray
+end local.spawn_pattern
+
+//========================================================
+// loop_colour_pattern:  When spawn_lights_loop is used 
+//			 with colour 'pattern', the colour
+//			 for each ring of lights is pulled 
+//			 from here
+//
+// For each ring the colour at the position in the list
+// below, that equals the number of the current ring will
+// be used when choosing a colour for the coronas.
+// If the amount of rings is greater or less then the 
+// number of colours in the list below. The list will 
+// start again from the beginning.
+//========================================================
+loop_colour_pattern:
+	
+	local.loop_colour_pattern = makearray
+	"redcorona"		//- Red
+	"yellowlight"		//- Yellow light with lensflare
+	"orangecorona"		//- Orange
+	"bluelight"		//- Blue light with lensflare
+	"redcorona"		//- Red
+	"all_random"		//- White	
+	"redcorona"		//- Red
+	"redlight"		//- Red light with lensflare
+	endarray
+
+end local.loop_colour_pattern
+
+//========================================================
+// blink_pattern: Set here ho the tree should blink.		  
+//
+// There are various threads/methods available to blink
+// the lights and the specific layer of lights in 
+// different ways, at variable settings.
+//
+// The list starts from the top and works it's way down to
+// the bottom. Once it reaches the bottom, it starts again
+// from the top. This goes on until the level ends. 
+// If a thread is sugested that is in-correct , it will be
+// skipped. For example if you have no loops and you want 
+// a loop to blink, it cant. 
+//
+// The following is a list of the threads/meathods you can
+// use.
+//
+// Each thread will have the parameter 'wait', This means
+// 'wait till done' or wait until this has finished. If set
+// then the thread will wait until it has finished before
+// moving onto the next thread. 
+//	
+//	
+//	'wait_for_time' - This tells the loop to wait a 
+//	==============	 specified amount of time. THis is
+//			 the only thread/method that does 
+//			 not have a wait setting.
+//	
+//	NOTE: There must always be at least one of these 
+//	      in the blink loop pattern or it will cause 
+//	      the server to crash. If you have any trouble
+//	      of have any questions, feel free to contact
+//	      me, ask in the forums. Details on contacting
+//	      me can be found at the top of this file.
+//
+//	time ( integer ) - Time to wait for.
+//	==================================================
+//	'loop_all_blink' - This blinks all the lights 
+//			   on the rings / loops
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	loop ( integer ) - Which loop to blink.
+//	==================================================
+//	'sprial_all_blink' - This blinks all the lights 
+//			     on the spirals
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	sprial ( integer ) - Which sprial to blink.
+//	==================================================
+//	'random_blink' - This blinks a random light
+//		         from all of the lights on the
+//			 tree.
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	==================================================
+//	'ring_blink' - This blinks all the lights on a
+//		       ring of a given loop.
+//
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	loop set number ( int ) - which loop of rings. set
+//				  above, if u have spanwed
+//				  2 sets of light_loops. 
+//				  the total number will be
+//				  2, putting 1, will mean
+//				  you want to blink some
+//				  lights in the first loop
+//				  you apawned.
+//	ring number ( integer ) - This is the ring number 
+//				  in the loop of rings you
+//				  spawned. For example, if
+//				  you spawned 1 loop of 3 
+//				  rings, the total ring 
+//				  number will be 3.
+//
+//	==================================================
+//	'sequence_ring_blink' - This blinks all the lights 
+//				on a given ring in order.
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	clockwise ( integer ) - Should we go clockwise or
+//				anti-clockwise?, right or	
+//				left, arround the ring.
+//	loop set number ( int ) - which loop of rings. set
+//				  above, if u have spanwed
+//				  2 sets of light_loops. 
+//				  the total number will be
+//				  2, putting 1, will mean
+//				  you want to blink some
+//				  lights in the first loop
+//				  you apawned.
+//	ring number ( integer ) - This is the ring number 
+//				  in the loop of rings you
+//				  spawned. For example, if
+//				  you spawned 1 loop of 3 
+//				  rings, the total ring 
+//				  number will be 3.
+//	==================================================
+//	'sequence_spiral_blink' - This blinks all the 
+//				  lights on the spiral 
+//				  in order. 
+//			     
+//	Parameters:
+//	time ( integer ) - Time to blink for, in seconds.
+//	up ( integer ) - This sets should the lights start
+//			 blinking from the top, or the 
+//			 bottom, making them travel up or
+//			 down.
+//	sprial ( integer ) - Which sprial to blink.
+//	==================================================
+//	'sprial_all_hide' - This hides all the lights 
+//			    on the spiral. 
+//	Parameters:
+//	sprial ( integer ) - Which sprial to hide.
+//	==================================================
+//	'sprial_all_show' - This unhides all the lights 
+//			    on the spiral. 
+//	Parameters:
+//	sprial ( integer ) - Which sprial to hide.
+//	==================================================
+//	'loop_all_hide' - This hides all the lights 
+//			    on the loop. 
+//	Parameters:
+//	sprial ( integer ) - Which sprial to hide.
+//	==================================================
+//	'loop_all_show' - This unhides all the lights 
+//			    on the loop. 
+//	Parameters:
+//	sprial ( integer ) - Which sprial to hide.
+//	==================================================
+//	'ring_show' - This hides all the lights on the 
+//		      ring of the loop provided.
+//
+//	loop set number ( int ) - which loop of rings. set
+//				  above, if u have spanwed
+//				  2 sets of light_loops. 
+//				  the total number will be
+//				  2, putting 1, will mean
+//				  you want to blink some
+//				  lights in the first loop
+//				  you apawned.
+//	ring number ( integer ) - This is the ring number 
+//				  in the loop of rings you
+//				  spawned. For example, if
+//				  you spawned 1 loop of 3 
+//				  rings, the total ring 
+//				  number will be 3.
+//	==================================================
+//	'ring_hide' - This unhides all the lights on the 
+//		      ring of the loop provided.
+//	Parameters:
+//	loop set number ( int ) - which loop of rings. set
+//				  above, if u have spanwed
+//				  2 sets of light_loops. 
+//				  the total number will be
+//				  2, putting 1, will mean
+//				  you want to blink some
+//				  lights in the first loop
+//				  you apawned.
+//	ring number ( integer ) - This is the ring number 
+//				  in the loop of rings you
+//				  spawned. For example, if
+//				  you spawned 1 loop of 3 
+//				  rings, the total ring 
+//				  number will be 3.
+//	==================================================
+//	Tip: It is usualy a good idea to have the last 
+//	     section wait till finish.
+//========================================================
+blink_pattern:
+	
+	// Edit how you want the tree to animate and blink here:
+
+	local.blink_pattern = makearray
+	//Thread to run				// Wait
+	
+	//blinka all lights in spiral		//wait for me to finish		//Time to stay blinked for		//sprial set number	
+	"spiral_all_blink"			1 					1.15					1	
+	
+	//blinka lights in spiral		//wait for me to finish		//Time to stay blinked for		//clockwise		//loop set number	//ring number
+	"sequence_ring_blink"			0 					0.05					1			1			1
+	
+	//blinka lights in spiral		//wait for me to finish		//Time to stay blinked for		//clockwise		//loop set number	//ring number
+	"sequence_ring_blink"			0 					0.05					1			1			2
+	
+	//blinka lights in ring			//wait for me to finish		//Time to stay blinked for		//clockwise		//loop set number	//ring number
+	"sequence_ring_blink"			0 					0.05					1			1			3
+	
+	//hide all sprial lights		//wait for me to finish		//sprial set number	
+	"spiral_all_hide"			1 					1	
+
+	//blink a ring in loop			//wait for me to finish		//Time to stay blinked for		//loop set number	//ring number
+	"ring_blink"				1 					0.10					1			4
+
+	//blink a ring in loop			//wait for me to finish		//Time to stay blinked for		//loop set number	//ring number
+	"ring_blink"				1 					0.10					1			5
+
+	//blink a ring in loop			//wait for me to finish		//Time to stay blinked for		//loop set number	//ring number
+	"ring_blink"				1					0.10					1			6
+	
+	//blink a ring in loop			//wait for me to finish		//sprial set number	
+	"spiral_all_show"			1 					1	
+
+	//Special thread to cause a pause. NOTE: You can increase the time, you can decrease the time. You can add more wait_for_time threads.
+	// however, You MUST NOT remove this. There must always be at least one wait_for_time, or the server will crash.
+	"wait_for_time"				0.60			
+	endarray
+
+end local.blink_pattern
